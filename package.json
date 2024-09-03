@@ -1,0 +1,11 @@
+{
+  "name": "server-syncrepo",
+  "version": "1.0.0",
+  "description": "Pull remote repositories & branches to local server",
+  "scripts": {
+    "start": "bash mac-server.sh",
+    "stop": "bash stop.sh"
+  },
+  "author": "Chad Cooper",
+  "license": "ISC"
+}
