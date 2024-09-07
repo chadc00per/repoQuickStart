@@ -10,8 +10,8 @@ nginx/nginx-conf.sh > $NGINX_CONFIG_DIR/nginx.conf
 # Verify the config
 nginx -t
 
-# Reload nginx
-sudo nginx -s reload
+# Reload nginx without requiring a password
+echo "$USER_PASSWORD" | sudo -S nginx -s reload
 
 # Print the new config to the console
 cat $NGINX_CONFIG_DIR/nginx.conf
