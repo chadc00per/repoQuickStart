@@ -10,7 +10,8 @@ if validate_json_config; then
 
     # repo-start && \
     bash repo-pullsync/checks.sh && \
-    bash repo-pullsync/sync-repos.sh
+    bash repo-pullsync/sync-repos.sh & \
+    bash nginx/load-config.sh
 
     echo "Syncing started"
     logServer "Syncing started"

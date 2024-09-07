@@ -17,7 +17,7 @@ logServer() {
 }
 
 set_nginx_config_dir() {
-    SYSTEM_TYPE=$(jq -r '.systemType' repoConfig.json)
+    SYSTEM_TYPE=$(jq -r '.systemType' "$REPO_CONFIG_JSON")
 
     if [ "$SYSTEM_TYPE" = "mac" ]; then
         NGINX_CONFIG_DIR="/opt/homebrew/etc/nginx/"
@@ -52,3 +52,6 @@ validate_json_config() {
 }
 
 export -f validate_json_config
+
+set_nginx_config_dir
+export -f set_nginx_config_dir
