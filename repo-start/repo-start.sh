@@ -4,7 +4,6 @@
 source config/config.sh
 source config/logging.sh
 
-REPO_DIR_USAGE="$(cd ~/$REPO_DIR && pwd)"
 repo-start() {
     REPOS=$(find $REPO_DIR_USAGE -type d -name ".git" \
         -not -path "$REPO_DIR_USAGE/Library/*" \

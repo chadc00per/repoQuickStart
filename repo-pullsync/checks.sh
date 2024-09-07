@@ -20,8 +20,10 @@ check_repositories() {
     for REPO in $(jq -r '.repositories | to_entries | map("\(.value)") | .[]' "$REPO_CONFIG_JSON"); do
         if [ -d "$SAVE_REPOS_TO_PATH/$REPO" ]; then
             FOUND_REPOS+=("$REPO")
+            logServer "Found repository: $REPO"
         else
             NOT_FOUND_REPOS+=("$REPO")
+            logServer "Repository not found: $REPO"
         fi
     done
 
@@ -32,6 +34,7 @@ check_repositories() {
         '{found: $found, notFound: $notFound}')
 
     echo "$JSON_OUTPUT"
+    logServer "Generated JSON output: $JSON_OUTPUT"
 }
 
 export -f check_repositories
@@ -56,6 +59,9 @@ download_not_found_repos() {
         REPO_NAME=$(basename "$REPO_URL" .git)
         if [ ! -d "$SAVE_REPOS_TO_PATH/$REPO_NAME" ]; then
             git clone "$REPO_URL" "$SAVE_REPOS_TO_PATH/$REPO_NAME"
+            logServer "Cloned repository: $REPO_URL to $SAVE_REPOS_TO_PATH/$REPO_NAME"
+        else
+            logServer "Repository already exists: $SAVE_REPOS_TO_PATH/$REPO_NAME"
         fi
     done
 }

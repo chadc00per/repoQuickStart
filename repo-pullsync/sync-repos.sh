@@ -5,8 +5,6 @@ source config/config.sh
 PID_FILE="/tmp/sync_repo.pid"
 export PID_FILE
 
-REPO_DIR_USAGE="$(cd ~/$REPO_DIR && pwd)"
-
 set -e
 cleanup() {
     rm -f "$PID_FILE"
@@ -45,14 +43,15 @@ while true; do
         if ! git -C "$REPO" fetch --all --prune; then
             REPO_NAME=$(basename "$REPO")
             MESSAGE="Repo $REPO_NAME failed: git fetch error"
-            if [ "$ERROR_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
-                osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Sync Error"'
+            if [ "$ERROR_NOTIFICATIONS" = true ]; then
+                send_alert "$MESSAGE" "$REPO_NAME" "Sync Error"
             fi
             logServer "$MESSAGE"
             continue
         fi
 
         ERROR_MESSAGES=""
+        CHANGES_MADE=false
 
         for REMOTE_BRANCH in $(git -C "$REPO" branch -r | grep -v '\->'); do
             LOCAL_BRANCH=${REMOTE_BRANCH#origin/}
@@ -61,11 +60,17 @@ while true; do
                 if ! git -C "$REPO" checkout $LOCAL_BRANCH || ! git -C "$REPO" pull --ff-only origin $LOCAL_BRANCH; then
                     ERROR_MESSAGES+="git pull error on branch $LOCAL_BRANCH\n"
                     continue
+                else
+                    if [ "$(git -C "$REPO" rev-parse HEAD)" != "$(git -C "$REPO" rev-parse @{u})" ]; then
+                        CHANGES_MADE=true
+                    fi
                 fi
             else
                 if ! git -C "$REPO" checkout --track $REMOTE_BRANCH || ! git -C "$REPO" pull --ff-only origin $LOCAL_BRANCH; then
                     ERROR_MESSAGES+="git checkout error on branch $LOCAL_BRANCH\n"
                     continue
+                else
+                    CHANGES_MADE=true
                 fi
             fi
         done
@@ -73,17 +78,22 @@ while true; do
         if [ -n "$ERROR_MESSAGES" ]; then
             REPO_NAME=$(basename "$REPO")
             MESSAGE="Repo $REPO_NAME failed:\n$ERROR_MESSAGES"
-            if [ "$ERROR_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
-                osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Sync Error"'
+            if [ "$ERROR_NOTIFICATIONS" = true ]; then
+                send_alert "$MESSAGE" "$REPO_NAME" "Sync Error"
             fi
             logServer "$MESSAGE"
         else
             REPO_NAME=$(basename "$REPO")
-            MESSAGE="Synced repo $REPO_NAME"
-            if [ "$SUCCESS_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
-                osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Successfully pulled!"'
+            if $CHANGES_MADE; then
+                MESSAGE="Synced repo $REPO_NAME with changes"
+                if [ "$SUCCESS_NOTIFICATIONS" = true ]; then
+                    send_alert "$MESSAGE" "$REPO_NAME" "Successfully pulled with changes!"
+                fi
+                logServer "$MESSAGE"
+            else
+                MESSAGE="Repo $REPO_NAME is already up to date"
+                logServer "$MESSAGE"
             fi
-            logServer "$MESSAGE"
         fi
     done
 
