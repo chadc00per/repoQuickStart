@@ -1,9 +1,11 @@
 #!/bin/bash
 
-source ../config.sh
+## Get REPO DIR & CONFIG FILE
+source config/config.sh
+source config/logging.sh
 
-REPO_DIR_USAGE="$(cd ~/$WHERE_MY_REPOS_ARE_AT && pwd)"
-display_repos() {
+REPO_DIR_USAGE="$(cd ~/$REPO_DIR && pwd)"
+repo-start() {
     REPOS=$(find $REPO_DIR_USAGE -type d -name ".git" \
         -not -path "$REPO_DIR_USAGE/Library/*" \
         -not -path "$REPO_DIR_USAGE/Application Support/*" \
@@ -29,6 +31,7 @@ display_repos() {
     end try')
 
     if [ -n "$SELECTED_REPO" ]; then
+        logServer "Selected repository: $SELECTED_REPO"
         PACKAGE_JSON_PATH="$SELECTED_REPO/package.json"
         if [ -f "$PACKAGE_JSON_PATH" ]; then
             SCRIPTS=$(jq -r '.scripts | to_entries | map("\(.key): \(.value)") | .[]' "$PACKAGE_JSON_PATH")
@@ -46,6 +49,7 @@ display_repos() {
             end try')
             if [ -n "$SELECTED_SCRIPT" ]; then
                 SCRIPT_NAME=$(echo "$SELECTED_SCRIPT" | cut -d':' -f1)
+                logServer "Selected script: $SCRIPT_NAME"
                 osascript -e 'tell application "Terminal"
                     do script "cd '"$SELECTED_REPO"' && npm run '"$SCRIPT_NAME"'"
                     activate
@@ -53,8 +57,9 @@ display_repos() {
             fi
         else
             osascript -e 'tell app "System Events" to display dialog "No package.json found in '"$SELECTED_REPO"'" buttons {"OK"} default button "OK"'
+            logServer "No package.json found in $SELECTED_REPO"
         fi
     fi
 }
 
-display_repos
+export -f repo-start

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../config.sh
+source config/config.sh
 
 PID_FILE="/tmp/sync_repo.pid"
 export PID_FILE
@@ -19,15 +19,11 @@ if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if ps -p $PID > /dev/null; then
         echo "Script is already running (PID: $PID). Exiting."
-        if [ "$LOGGING_ENABLED" = true ]; then
-            echo "$(date): Script is already running (PID: $PID). Exiting." >> "$LOG_FILE"
-        fi
+        logServer "Script is already running (PID: $PID). Exiting."
         exit 1
     else
         echo "Removing stale PID file."
-        if [ "$LOGGING_ENABLED" = true ]; then
-            echo "$(date): Removing stale PID file." >> "$LOG_FILE"
-        fi
+        logServer "Removing stale PID file."
         rm -f "$PID_FILE"
     fi
 fi
@@ -38,27 +34,21 @@ cd "$REPO_DIR_USAGE"
 
 while true; do
     echo "Syncing repositories in: $REPO_DIR_USAGE at $(date)"
-    if [ "$LOGGING_ENABLED" = true ]; then
-        echo "$(date): Syncing repositories in: $REPO_DIR_USAGE" >> "$LOG_FILE"
-    fi
+    logServer "Syncing repositories in: $REPO_DIR_USAGE"
 
     REPOS=$(find . -type d -name ".git" -exec dirname {} \;)
 
     for REPO in $REPOS; do
         echo "Syncing repository: $REPO at $(date)"
-        if [ "$LOGGING_ENABLED" = true ]; then
-            echo "$(date): Syncing repository: $REPO" >> "$LOG_FILE"
-        fi
+        logServer "Syncing repository: $REPO"
 
         if ! git -C "$REPO" fetch --all --prune; then
             REPO_NAME=$(basename "$REPO")
             MESSAGE="Repo $REPO_NAME failed: git fetch error"
-            if [ "$ERROR_NOTIFICATIONS" = true ]; then
+            if [ "$ERROR_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
                 osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Sync Error"'
             fi
-            if [ "$LOGGING_ENABLED" = true ]; then
-                echo "$(date): $MESSAGE" >> "$LOG_FILE"
-            fi
+            logServer "$MESSAGE"
             continue
         fi
 
@@ -83,27 +73,21 @@ while true; do
         if [ -n "$ERROR_MESSAGES" ]; then
             REPO_NAME=$(basename "$REPO")
             MESSAGE="Repo $REPO_NAME failed:\n$ERROR_MESSAGES"
-            if [ "$ERROR_NOTIFICATIONS" = true ]; then
+            if [ "$ERROR_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
                 osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Sync Error"'
             fi
-            if [ "$LOGGING_ENABLED" = true ]; then
-                echo -e "$(date): $MESSAGE" >> "$LOG_FILE"
-            fi
+            logServer "$MESSAGE"
         else
             REPO_NAME=$(basename "$REPO")
             MESSAGE="Synced repo $REPO_NAME"
-            if [ "$SUCCESS_NOTIFICATIONS" = true ]; then
+            if [ "$SUCCESS_NOTIFICATIONS" = true ] && [ "$SYSTEM_TYPE" = "mac" ]; then
                 osascript -e 'display notification "'"$MESSAGE"'" with title "Repo: '"$REPO_NAME"'" subtitle "Successfully pulled!"'
             fi
-            if [ "$LOGGING_ENABLED" = true ]; then
-                echo "$(date): $MESSAGE" >> "$LOG_FILE"
-            fi
+            logServer "$MESSAGE"
         fi
     done
 
     echo "Sync complete. 1 minute until next sync..."
-    if [ "$LOGGING_ENABLED" = true ]; then
-        echo "$(date): Sync complete. 1 minute until next sync..." >> "$LOG_FILE"
-    fi
+    logServer "Sync complete. 1 minute until next sync..."
     sleep $INTERVAL
 done

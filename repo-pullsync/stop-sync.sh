@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source sync-repos.sh
+source repo-pullsync/sync-repos.sh
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")

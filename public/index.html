@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Status</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/server-status');
+                if (response.ok) {
+                    const status = await response.text();
+                    document.getElementById('status').innerText = status;
+                } else {
+                    document.getElementById('status').innerText = 'Error fetching server status';
+                }
+            } catch (error) {
+                document.getElementById('status').innerText = 'Error fetching server status';
+            }
+        }
+
+        window.onload = checkServerStatus;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Server Status</h1>
+        <div id="status">Checking server status...</div>
+    </div>
+</body>
+</html>

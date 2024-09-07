@@ -1,0 +1,20 @@
+{
+    "repositories": {
+      "test": "localcation1",
+      "local": "localcation2",
+      "here": "localcation3"
+    },
+    "root": {
+      "/": "local3"
+    },
+    "port": 80,
+    "serverName": "localhost",
+    "logFile": "serverlog.log",
+    "systemType": "mac",
+    "syncInterval": 10,
+    "serveAllRepos": true,
+    "saveReposTo": "test",
+    "ERROR_NOTIFICATIONS": true,
+    "SUCCESS_NOTIFICATIONS": true,
+    "LOGGING_ENABLED": true
+  }

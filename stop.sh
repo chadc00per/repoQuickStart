@@ -2,7 +2,8 @@
 
 # Stop all services
 
-source config.sh
+source config/config.sh
+
 echo "Stopping server at $(hostname)"
 
 for script in $(find . -name 'stop-*.sh'); do
@@ -10,13 +11,9 @@ for script in $(find . -name 'stop-*.sh'); do
     script_name=$(basename "$script")
     echo "Stopping $script_name"
 
-    if [ "$LOGGING_ENABLED" = true ]; then
-        echo "$(date): Stopping $script_name" >> "$LOG_FILE"
-    fi
+    logServer "Stopping $script_name"
 done
 
 echo "Server stopped"
 
-if [ "$LOGGING_ENABLED" = true ]; then
-    echo "$(date): Server stopped" >> "$LOG_FILE"
-fi
+logServer "Server stopped"

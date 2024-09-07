@@ -1,17 +1,21 @@
-source config.sh
-echo "Server started at $(hostname)"
+source config/config.sh
 
-if [ "$LOGGING_ENABLED" = true ]; then
-    echo "$(date): Server started at $(hostname)" >> "$LOG_FILE"
-fi
+#source repo-start/repo-start.sh
 
-cd ~/repoQuickStart
+if validate_json_config; then
+    echo "Server started at $(hostname)"
+    logServer "Server started at $(hostname)"
 
-bash repo-start/repo-start.sh & \
-bash repo-pullsync/sync-repos.sh
+    cd ~/repoQuickStart
 
-echo "Syncing started"
+    # repo-start && \
+    bash repo-pullsync/checks.sh && \
+    bash repo-pullsync/sync-repos.sh
 
-if [ "$LOGGING_ENABLED" = true ]; then
-    echo "$(date): Syncing started" >> "$LOG_FILE"
+    echo "Syncing started"
+    logServer "Syncing started"
+else
+    echo "Error: Invalid JSON configuration."
+    logServer "Error: Invalid JSON configuration."
+    exit 1
 fi
